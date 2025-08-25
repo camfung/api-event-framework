@@ -95,6 +95,9 @@ class AEF_Event_Registry
 
     public function handle_user_login($user_login, $user)
     {
+        // Log to console (JavaScript)
+        $this->log_to_console("Hello " . $user->display_name ?: $user_login);
+        
         $event_data = [
             'user_login' => $user_login,
             'user_id' => $user->ID,
@@ -326,5 +329,21 @@ class AEF_Event_Registry
         return $wpdb->get_row(
             $wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $event_id)
         );
+    }
+
+    private function log_to_console($message)
+    {
+        if (is_admin()) {
+            return;
+        }
+        
+        $safe_message = json_encode($message);
+        add_action('wp_footer', function() use ($safe_message) {
+            echo "<script>console.log('AEF: ' + {$safe_message});</script>";
+        });
+        
+        add_action('admin_footer', function() use ($safe_message) {
+            echo "<script>console.log('AEF: ' + {$safe_message});</script>";
+        });
     }
 }
